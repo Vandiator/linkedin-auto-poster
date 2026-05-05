@@ -1,0 +1,21 @@
+{
+  "name": "cloudinary-media-storage",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloudinary upload helper + local gallery for surfacing generated media.",
+  "main": "upload.js",
+  "scripts": {
+    "upload": "node upload.js",
+    "list": "node list.js",
+    "gallery": "node gallery.js"
+  },
+  "dependencies": {
+    "cloudinary": "^2.5.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "multer": "^1.4.5-lts.1",
+    "openai": "^4.77.0",
+    "pdf-lib": "^1.17.1"
+  }
+}
