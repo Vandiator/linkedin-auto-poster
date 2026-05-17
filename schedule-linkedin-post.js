@@ -7,45 +7,58 @@ const TOKEN = process.env.BUFFER_API_TOKEN;
 const CHANNEL_ID = process.env.LINKEDIN_CHANNEL_ID;
 const URL = 'https://api.buffer.com/graphql';
 
-// === Edit these for each post ===
+// ✏️ CHANGED: Slide filenames updated to match new carousel.js slide IDs
 const SLIDES = [
   './output/slide-1-hook.png',
-  './output/slide-2-humanizer.png',
-  './output/slide-3-diagram.png',
-  './output/slide-4-remotion.png',
-  './output/slide-5-frontend.png',
-  './output/slide-6-pdf-cta.png',
+  './output/slide-2-ai-agents.png',
+  './output/slide-3-gpt5-era.png',
+  './output/slide-4-ai-coding.png',
+  './output/slide-5-ai-design.png',
+  './output/slide-6-cta.png',
 ];
 
-const POST_TEXT = `I used to think Claude "skills" were a gimmick.
+// ✏️ CHANGED: Post text rewritten for tech/AI news topic
+const POST_TEXT = `The tech landscape is shifting faster than most people realize.
 
-Nice idea, marketing fluff, real work still happens in the chat window.
+Here's what's actually changing right now — and what it means for you:
 
-I was wrong.
+🤖 AI Agents are no longer a demo.
+They're replacing entire workflows. 68% of repetitive tasks can be automated today.
 
-Six months later, five of them do most of the work in my day:
+🧠 New AI models are rewriting the rules.
+Multimodal reasoning. Real-time web access. On-device AI. The gap between "AI" and "human" is closing fast.
 
-1. Humanizer — strips the AI fingerprints out of my drafts. Em-dashes, "delve", every parallelism. The output reads like me.
+💻 AI is writing your code.
+GitHub Copilot, Claude Code, Cursor AI — devs who use these are outperforming those who don't.
 
-2. Architecture-diagram-creator — describe a system, get a clean diagram. I haven't opened Figma to draw a flow chart in months.
+🎨 Design just got disrupted.
+Prompt → Generate → Refine → Export. What used to take days now takes minutes.
 
-3. Remotion — I write JSX, I get a rendered video. My short-form workflow is now a folder of scripts.
+🚀 What's coming next:
+• Humanoid robots entering mass production
+• AI browsers that navigate the web for you
+• Spatial computing going mainstream
+• Open Source AGI closer than you think
 
-4. Frontend-design — "build me a landing page for X" produces something that doesn't look AI-generated. First try.
+The question isn't whether this will affect your industry.
+It's whether you'll be ready when it does.
 
-5. PDF — read, write, merge, fill, OCR. The unglamorous half of every contract and invoice job is gone.
+Follow for weekly tech and AI updates that actually matter.
 
-The reason it took me so long to use them: I was treating Claude like a chatbot when it was already an OS.
+#AI #Tech #FutureOfWork #ArtificialIntelligence #Innovation`;
 
-Full walkthrough of how I use each one is on YouTube — link in the comments.
+// ✏️ CHANGED: Document title, folder, and public ID updated for new topic
+const DOC_TITLE = 'Latest Tech & AI Updates You Need To Know';
+const PDF_FOLDER = 'carousel/tech-ai-news';
+const PDF_PUBLIC_ID = 'carousel-tech-ai-news';
 
-#ClaudeAI #AI #Productivity #BuildInPublic`;
+// ✏️ CHANGED: Replace this with your actual Cloudinary URL for slide-1-hook.png
+// You can find it in your Cloudinary dashboard or from the carousel.js output above
+const THUMBNAIL_URL = 'YOUR_CLOUDINARY_URL_FOR_SLIDE_1_HERE';
 
-const DOC_TITLE = "5 Claude Skills I Can't Live Without";
-const PDF_FOLDER = 'carousel/claude-skills/2026-05-05';
-const PDF_PUBLIC_ID = 'carousel-claude-skills';
-const THUMBNAIL_URL = 'https://res.cloudinary.com/dbmdg3kmz/image/upload/v1777947242/carousel/claude-skills/2026-05-05/slide-1-hook.png';
-const DUE_AT = '2026-05-06T09:30:00+10:00';
+// ✏️ CHANGED: Set your desired post date and time (ISO format, your timezone)
+// Example: '2026-05-19T09:00:00+05:30' = tomorrow at 9am India time
+const DUE_AT = '2026-05-19T09:00:00+05:30';
 // =================================
 
 async function gql(query, variables = {}) {
@@ -74,9 +87,6 @@ async function buildPdf() {
   return localPath;
 }
 
-// PDFs must be uploaded as resource_type='raw' so Cloudinary serves them
-// with Content-Type: application/pdf. The default 'image' type is blocked
-// by Cloudinary's PDF/ZIP delivery security setting.
 async function uploadPdfAsRaw(localPath) {
   console.log('\nUploading PDF to Cloudinary (raw)...');
   const result = await cloudinary.uploader.upload(localPath, {
@@ -150,7 +160,7 @@ async function main() {
 
   const post = result.data?.createPost;
   if (post?.__typename === 'PostActionSuccess') {
-    console.log(`\n✓ Scheduled. Post ID: ${post.post.id}`);
+    console.log(`\n✓ Scheduled! Post ID: ${post.post.id}`);
     console.log(`  Status: ${post.post.status}`);
     console.log(`  Due at: ${post.post.dueAt}`);
   } else if (post?.message) {

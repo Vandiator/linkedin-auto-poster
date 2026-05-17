@@ -1,186 +1,228 @@
 import 'dotenv/config';
-import OpenAI, { toFile } from 'openai';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { basename, extname } from 'node:path';
+import { GoogleGenAI } from '@google/genai';
+import { writeFileSync, mkdirSync } from 'node:fs';
 import { uploadMedia } from './upload.js';
 
-const MIME_BY_EXT = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
+// ─── Gemini client (reads GEMINI_API_KEY from .env) ───────────────────────
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-async function loadRef(filePath) {
-  const buf = readFileSync(filePath);
-  const ext = extname(filePath).toLowerCase();
-  const mime = MIME_BY_EXT[ext] ?? 'image/jpeg';
-  const safeName = basename(filePath).replace(/[^a-zA-Z0-9._-]/g, '_');
-  return await toFile(buf, safeName, { type: mime });
-}
+// ─── YOUR SETTINGS ────────────────────────────────────────────────────────
+// ✏️ CHANGED: Topic and folder slug updated to tech news theme
+const TOPIC = 'Latest Tech & AI Updates You Need To Know';
+const FOLDER_SLUG = 'tech-ai-news';
 
-const openai = new OpenAI();
-
-const STYLE_REFS = [
-  'Style-Guide/thumbnail-3 (4).jpg',
-  'Style-Guide/thumbnail-1 (22).jpg',
-];
-
+// ─── STYLE RULES ──────────────────────────────────────────────────────────
+// ✏️ CHANGED: Entire style rewritten — professional blue/white LinkedIn look
 const STYLE_RULES = `
-Visual style — match these exactly:
-- Background: near-black with a subtle blue/grey grid pattern, soft warm orange ambient glow from one corner.
-- Typography: bold uppercase condensed sans-serif headlines (think Anton or Bebas Neue). Some words pure white; the punchline word sits inside a chunky solid yellow rectangular highlight block with black text.
-- Lighting: soft warm orange rim light on objects, dark falloff to edges.
-- Objects: rendered as clean, modern 3D with soft shadows and slight gloss — laptop, phone, dashboard cards, app icons floating.
-- Mascot: a soft 3D rounded-square character, terracotta-orange clay material, with bold black ">" and "<" eyes (closed/squinting). It can hold things or peek into the frame.
-- No real photos of people. No human faces. Mascot only.
-- Aspect ratio: 1:1 square. Composition kept centered with safe margins so nothing critical hits the edges.
-- Mood: confident, modern AI-builder energy — same vibe as a premium YouTube tech thumbnail.
+Visual style — follow exactly:
+- Background: clean white or very light grey (#F7F9FC). No dark backgrounds.
+- Accent color: strong professional blue (#0A66C2 — LinkedIn blue) used for highlight blocks, borders, icons, and divider lines.
+- Typography: clean modern sans-serif (Inter or Helvetica style). Headlines in deep navy (#0D1B2A), bold. Subtext in medium grey (#4A5568).
+- Key headline words sit inside a solid LinkedIn-blue rectangular highlight block with white text inside.
+- Layout: minimal, structured, lots of breathing room. Think McKinsey slide meets LinkedIn post.
+- Icons and illustrations: flat 2D line-art style icons in blue and navy. No 3D rendering. No clay characters. No mascots.
+- Data or stats: displayed inside clean rounded-rectangle cards with a thin blue border, white fill, and a blue accent bar on the left edge.
+- Dividers: thin single-line blue horizontal rules to separate sections.
+- No gradients. No glow effects. No dark moody lighting.
+- Aspect ratio: 1:1 square. Clean margins on all sides (at least 8% padding).
+- Mood: authoritative, professional, trustworthy — like a top LinkedIn thought leader's post.
+- Bottom of every slide: a thin blue bottom bar with small white text "Tech & AI Weekly" centered.
 `;
 
-const TOPIC = '5 Claude Skills I Cant Live Without';
-const FOLDER_SLUG = 'claude-skills';
-
+// ─── SLIDES ───────────────────────────────────────────────────────────────
+// ✏️ CHANGED: All 6 slides rewritten for tech/AI news topic
 const slides = [
   {
     id: 'slide-1-hook',
     label: 'Hook',
-    prompt: `INSTAGRAM CAROUSEL SLIDE 1 OF 6 — HOOK.
-Headline composition (top 50% of frame, large):
-Line 1 (white, all-caps): "5 CLAUDE SKILLS"
-Line 2 (black text inside a chunky solid yellow highlight block, all-caps): "I CAN'T LIVE WITHOUT"
+    prompt: `LINKEDIN CAROUSEL SLIDE 1 OF 6 — HOOK.
+Clean white background, professional layout.
 
-Below the headline, a vertical numbered list (1 through 5) rendered as five clean 3D rounded-square tiles stacked or arranged in a tight 2-column grid floating on the dark grid surface, each tile a soft warm-grey or off-white with a tiny different colored accent dot. Each tile shows a number badge (1, 2, 3, 4, 5) and a placeholder word: "HUMANIZER", "DIAGRAM", "REMOTION", "FRONTEND", "PDF" — one per tile. Bold, black text on each tile.
+Top section:
+- Small blue label tag (rounded pill shape): "TECH & AI UPDATE"
+- Main headline (large, bold, deep navy): "THE TECH SHIFTS"
+- Second line (white text inside solid LinkedIn-blue highlight block, bold): "HAPPENING RIGHT NOW"
+- Below headline: a thin blue horizontal divider line.
 
-Bottom-right corner: small white "Swipe →" cue.
+Center section:
+A clean 2x3 grid of six flat icon cards (white cards, thin blue border, blue accent left bar), each showing:
+Card 1: rocket icon + "AI Agents"
+Card 2: chip icon + "GPT-5 Era"
+Card 3: code bracket icon + "AI Coding"
+Card 4: paintbrush icon + "AI Design"
+Card 5: globe icon + "Open Source AI"
+Card 6: arrow icon + "What's Next"
+All card text in navy, icons in LinkedIn blue.
 
+Bottom-right: small navy text "Swipe to explore →"
+Bottom bar: thin blue bar, white text "Tech & AI Weekly"
 ${STYLE_RULES}`,
   },
   {
-    id: 'slide-2-humanizer',
-    label: 'Humanizer',
-    prompt: `INSTAGRAM CAROUSEL SLIDE 2 OF 6 — SKILL #1.
-Top-left small label (white, sans-serif): "01 / 05"
-Headline composition:
-Line 1 (white, all-caps): "MAKE AI WRITING"
-Line 2 (black text inside chunky solid yellow highlight block, all-caps): "SOUND HUMAN"
+    id: 'slide-2-ai-agents',
+    label: 'AI Agents',
+    prompt: `LINKEDIN CAROUSEL SLIDE 2 OF 6 — AI AGENTS.
+Clean white background, professional layout.
 
-Below, on the dark grid surface: a clean 3D scene showing a sheet of paper with typed text on it, where some words are highlighted/scrubbed and being "rewritten" — soft glowing ink trails replacing stiff text. Next to the paper, a small 3D rounded-square "skill chip" tile that reads "/humanizer" in clean monospace black text on white.
-The orange clay mascot peeks in from one side, > < eyes, holding a tiny eraser or red pen.
+Top-left: small blue pill label "01 / 05"
+Headline:
+Line 1 (bold navy): "AI AGENTS ARE"
+Line 2 (white text in solid blue highlight block): "REPLACING WORKFLOWS"
 
-Bottom-center caption (small white text): "Skill: humanizer"
+Below headline, thin blue divider.
 
+Center: three clean white rounded-rectangle stat cards arranged horizontally, each with a thin blue border and blue left accent bar:
+Card 1: blue icon of a robot/agent — bold navy number "68%" — grey subtext "of repetitive tasks can be automated by AI agents in 2025"
+Card 2: blue icon of a chain/workflow — bold navy "$4.4T" — grey subtext "estimated productivity gain from AI agents by 2030"
+Card 3: blue icon of a lightning bolt — bold navy "10x" — grey subtext "faster task completion vs manual workflows"
+
+Below cards: one clean line of navy text (small, sentence case): "Tools leading this: AutoGPT, Claude, LangChain, CrewAI"
+
+Bottom bar: thin blue bar, white text "Tech & AI Weekly"
 ${STYLE_RULES}`,
   },
   {
-    id: 'slide-3-diagram',
-    label: 'Diagram',
-    prompt: `INSTAGRAM CAROUSEL SLIDE 3 OF 6 — SKILL #2.
-Top-left small label (white, sans-serif): "02 / 05"
-Headline composition:
-Line 1 (white, all-caps): "ARCHITECTURE DIAGRAMS"
-Line 2 (black text inside chunky solid yellow highlight block, all-caps): "IN ONE PROMPT"
+    id: 'slide-3-gpt5-era',
+    label: 'GPT-5 Era',
+    prompt: `LINKEDIN CAROUSEL SLIDE 3 OF 6 — THE NEW AI MODELS.
+Clean white background, professional layout.
 
-Below, on the dark grid surface: a clean 3D rendered architecture flow diagram floating in mid-air — three or four rounded-rectangle nodes connected by glowing orange directional arrows, with small icons inside each node (database cylinder, gear, cloud, screen). Soft shadows beneath.
-Next to the diagram, a small 3D "skill chip" tile reading "/diagram" in monospace black text on white.
+Top-left: small blue pill label "02 / 05"
+Headline:
+Line 1 (bold navy): "NEW AI MODELS ARE"
+Line 2 (white text in solid blue highlight block): "CHANGING EVERYTHING"
 
-Bottom-center caption (small white text): "Skill: architecture-diagram-creator"
+Below headline, thin blue divider.
 
+Center: a clean vertical comparison list — four rows, each row is a white card with blue left accent bar:
+Row 1: blue dot + navy bold "Multimodal reasoning" — grey text "Models now see, hear, and read simultaneously"
+Row 2: blue dot + navy bold "Real-time web access" — grey text "AI answers are no longer stuck in the past"
+Row 3: blue dot + navy bold "Longer context windows" — grey text "Entire codebases and books fit in one prompt"
+Row 4: blue dot + navy bold "On-device AI" — grey text "Powerful models running locally on your laptop"
+
+Bottom bar: thin blue bar, white text "Tech & AI Weekly"
 ${STYLE_RULES}`,
   },
   {
-    id: 'slide-4-remotion',
-    label: 'Remotion',
-    prompt: `INSTAGRAM CAROUSEL SLIDE 4 OF 6 — SKILL #3.
-Top-left small label (white, sans-serif): "03 / 05"
-Headline composition:
-Line 1 (white, all-caps): "MAKE VIDEOS"
-Line 2 (black text inside chunky solid yellow highlight block, all-caps): "WITH CODE"
+    id: 'slide-4-ai-coding',
+    label: 'AI Coding',
+    prompt: `LINKEDIN CAROUSEL SLIDE 4 OF 6 — AI CODING TOOLS.
+Clean white background, professional layout.
 
-Below, on the dark grid surface: a clean 3D scene of a film clapperboard merged with a code editor — a stylized monitor showing JSX code with timeline scrubber bars at the bottom, and a glowing orange play button overlay. A small filmstrip curl floats nearby.
-Next to it, a small 3D "skill chip" tile reading "/remotion" in monospace black text on white.
+Top-left: small blue pill label "03 / 05"
+Headline:
+Line 1 (bold navy): "AI IS WRITING"
+Line 2 (white text in solid blue highlight block): "YOUR CODE NOW"
 
-Bottom-center caption (small white text): "Skill: Remotion video-as-code"
+Below headline, thin blue divider.
 
+Center: a clean 2x2 grid of four tool cards (white, thin blue border, blue top accent bar):
+Card 1: code icon — navy bold "GitHub Copilot" — grey text "Autocomplete for entire functions"
+Card 2: terminal icon — navy bold "Claude Code" — grey text "Agentic coding in your terminal"
+Card 3: cursor icon — navy bold "Cursor AI" — grey text "AI-native code editor"
+Card 4: bolt icon — navy bold "Devin" — grey text "World's first AI software engineer"
+
+Below grid, small navy sentence: "Junior devs who use these tools are outperforming seniors who don't."
+
+Bottom bar: thin blue bar, white text "Tech & AI Weekly"
 ${STYLE_RULES}`,
   },
   {
-    id: 'slide-5-frontend',
-    label: 'Frontend Design',
-    prompt: `INSTAGRAM CAROUSEL SLIDE 5 OF 6 — SKILL #4.
-Top-left small label (white, sans-serif): "04 / 05"
-Headline composition:
-Line 1 (white, all-caps): "PRODUCTION UI"
-Line 2 (black text inside chunky solid yellow highlight block, all-caps): "IN ONE SHOT"
+    id: 'slide-5-ai-design',
+    label: 'AI Design',
+    prompt: `LINKEDIN CAROUSEL SLIDE 5 OF 6 — AI IN DESIGN.
+Clean white background, professional layout.
 
-Below, on the dark grid surface: a clean 3D scene with a tilted laptop showing a sleek modern web app hero section (big heading, gradient buttons, a card grid). Floating beside the laptop, a smaller phone showing the responsive version of the same UI. Soft warm glow.
-Next to the devices, a small 3D "skill chip" tile reading "/frontend-design" in monospace black text on white.
+Top-left: small blue pill label "04 / 05"
+Headline:
+Line 1 (bold navy): "DESIGN JUST GOT"
+Line 2 (white text in solid blue highlight block): "DISRUPTED BY AI"
 
-Bottom-center caption (small white text): "Skill: frontend-design"
+Below headline, thin blue divider.
 
+Center: a clean horizontal timeline (left to right) with four steps connected by a thin blue line and blue dot nodes:
+Step 1: navy bold "Prompt" — grey text "Describe what you want"
+Step 2: navy bold "Generate" — grey text "AI creates multiple variations"
+Step 3: navy bold "Refine" — grey text "Edit with natural language"
+Step 4: navy bold "Export" — grey text "Production-ready in minutes"
+
+Below timeline, a clean white card with blue left accent bar:
+Navy bold text: "Tools: Midjourney V7, Figma AI, Adobe Firefly, Canva AI"
+Grey subtext: "Design teams are 3x faster — or being replaced entirely."
+
+Bottom bar: thin blue bar, white text "Tech & AI Weekly"
 ${STYLE_RULES}`,
   },
   {
-    id: 'slide-6-pdf-cta',
-    label: 'PDF + CTA',
-    prompt: `INSTAGRAM CAROUSEL SLIDE 6 OF 6 — SKILL #5 + CTA.
-Top-left small label (white, sans-serif): "05 / 05"
-Headline composition:
-Line 1 (white, all-caps): "READ, WRITE, MERGE"
-Line 2 (black text inside chunky solid yellow highlight block, all-caps): "ANY PDF"
+    id: 'slide-6-cta',
+    label: 'CTA',
+    prompt: `LINKEDIN CAROUSEL SLIDE 6 OF 6 — WHAT'S NEXT + CTA.
+Clean white background, professional layout.
 
-Center: a clean 3D scene of two PDF documents tilted toward the viewer, one being merged into the other with soft glowing seam lines. A small 3D "skill chip" tile reading "/pdf" in monospace black text on white floats nearby.
+Top-left: small blue pill label "05 / 05"
+Headline:
+Line 1 (bold navy): "STAY AHEAD OF"
+Line 2 (white text in solid blue highlight block): "EVERY AI SHIFT"
 
-Below the visual, smaller clean white text (sentence case, not all caps): "Comment 'SKILLS' for my full Claude Code setup"
-The orange clay mascot stands at bottom-right pointing forward enthusiastically, both arms raised, > < eyes, surrounded by a soft warm orange glow.
+Below headline, thin blue divider.
 
+Center: a clean white rounded card with a thin blue border and subtle blue top accent bar, containing:
+- Navy bold title: "What's coming next:"
+- Four clean bullet rows (blue bullet dot, navy bold label, grey description text):
+  • "Humanoid robots" — Mass production begins in 2025
+  • "AI Browsers" — Agents that browse the web for you
+  • "Spatial Computing" — Apple Vision Pro ecosystem exploding
+  • "Open Source AGI" — Meta and Mistral closing the gap fast
+
+Below card: clean navy text (centered, sentence case): "Follow for weekly updates on what's changing in tech and AI."
+
+A single clean blue rounded CTA button shape (flat, no shadow) with white bold text: "Follow for more →"
+
+Bottom bar: thin blue bar, white text "Tech & AI Weekly"
 ${STYLE_RULES}`,
   },
 ];
 
-async function generateSlide(slide, refFiles) {
-  const candidates = ['gpt-image-2', 'gpt-image-1'];
-  let lastError;
-  for (const model of candidates) {
-    try {
-      console.log(`[${slide.id}] Generating with ${model}...`);
-      const result = await openai.images.edit({
-        model,
-        image: refFiles,
-        prompt: slide.prompt,
-        size: '1024x1024',
-        quality: 'high',
-        n: 1,
-      });
-      const b64 = result.data[0].b64_json;
-      const localPath = `./output/${slide.id}.png`;
-      writeFileSync(localPath, Buffer.from(b64, 'base64'));
-      console.log(`[${slide.id}] Saved local. Uploading to Cloudinary...`);
-      const dateSlug = new Date().toISOString().slice(0, 10);
-      const upload = await uploadMedia(localPath, {
-        folder: `carousel/${FOLDER_SLUG}/${dateSlug}`,
-        publicId: slide.id,
-        tags: ['carousel', 'instagram', FOLDER_SLUG, slide.label.toLowerCase()],
-      });
-      return { ...upload, model, label: slide.label };
-    } catch (e) {
-      lastError = e;
-      const isModelMissing = /not.*found|invalid.*model|does not exist|model.*available|unknown.*model/i.test(e.message);
-      if (model === candidates[0] && isModelMissing) {
-        console.log(`[${slide.id}] ${model} unavailable, falling back...`);
-        continue;
-      }
-      throw e;
-    }
-  }
-  throw lastError;
+// ─── GENERATE ONE SLIDE via Gemini 2.0 Flash (FREE) ──────────────────────
+async function generateSlide(slide) {
+  console.log(`[${slide.id}] Generating with Gemini 2.0 Flash (free)...`);
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash-image',
+    contents: [{ role: 'user', parts: [{ text: slide.prompt }] }],
+    config: {
+      responseModalities: ['TEXT', 'IMAGE'],
+    },
+  });
+
+  const parts = response.candidates[0].content.parts;
+  const imagePart = parts.find(p => p.inlineData);
+  if (!imagePart) throw new Error('No image returned by Gemini');
+
+  const imageBytes = imagePart.inlineData.data;
+  const localPath = `./output/${slide.id}.png`;
+  writeFileSync(localPath, Buffer.from(imageBytes, 'base64'));
+  console.log(`[${slide.id}] Saved locally. Uploading to Cloudinary...`);
+
+  const dateSlug = new Date().toISOString().slice(0, 10);
+  const upload = await uploadMedia(localPath, {
+    folder: `carousel/${FOLDER_SLUG}/${dateSlug}`,
+    publicId: slide.id,
+    tags: ['carousel', 'linkedin', FOLDER_SLUG, slide.label.toLowerCase()],
+  });
+
+  return { ...upload, label: slide.label };
 }
 
+// ─── MAIN ─────────────────────────────────────────────────────────────────
 async function main() {
   mkdirSync('./output', { recursive: true });
-  console.log('Loading style reference images...');
-  const refFiles = await Promise.all(STYLE_REFS.map(loadRef));
 
   const results = [];
   for (const slide of slides) {
     try {
-      const r = await generateSlide(slide, refFiles);
-      results.push({ slide: slide.id, label: r.label, url: r.url, model: r.model });
+      const r = await generateSlide(slide);
+      results.push({ slide: slide.id, label: r.label, url: r.url });
       console.log(`[${slide.id}] DONE — ${r.url}`);
     } catch (e) {
       console.error(`[${slide.id}] FAILED: ${e.message}`);
