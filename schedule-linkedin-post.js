@@ -7,17 +7,16 @@ const TOKEN = process.env.BUFFER_API_TOKEN;
 const CHANNEL_ID = process.env.LINKEDIN_CHANNEL_ID;
 const URL = 'https://api.buffer.com/graphql';
 
-// ✏️ CHANGED: Slide filenames updated to match new carousel.js slide IDs
+// ✏️ CHANGED: Extensions updated to .jpg (Hugging Face saves as JPG not PNG)
 const SLIDES = [
-  './output/slide-1-hook.png',
-  './output/slide-2-ai-agents.png',
-  './output/slide-3-gpt5-era.png',
-  './output/slide-4-ai-coding.png',
-  './output/slide-5-ai-design.png',
-  './output/slide-6-cta.png',
+  './output/slide-1-hook.jpg',
+  './output/slide-2-ai-agents.jpg',
+  './output/slide-3-gpt5-era.jpg',
+  './output/slide-4-ai-coding.jpg',
+  './output/slide-5-ai-design.jpg',
+  './output/slide-6-cta.jpg',
 ];
 
-// ✏️ CHANGED: Post text rewritten for tech/AI news topic
 const POST_TEXT = `The tech landscape is shifting faster than most people realize.
 
 Here's what's actually changing right now — and what it means for you:
@@ -47,18 +46,15 @@ Follow for weekly tech and AI updates that actually matter.
 
 #AI #Tech #FutureOfWork #ArtificialIntelligence #Innovation`;
 
-// ✏️ CHANGED: Document title, folder, and public ID updated for new topic
 const DOC_TITLE = 'Latest Tech & AI Updates You Need To Know';
 const PDF_FOLDER = 'carousel/tech-ai-news';
 const PDF_PUBLIC_ID = 'carousel-tech-ai-news';
 
-// ✏️ CHANGED: Replace this with your actual Cloudinary URL for slide-1-hook.png
-// You can find it in your Cloudinary dashboard or from the carousel.js output above
-const THUMBNAIL_URL = 'YOUR_CLOUDINARY_URL_FOR_SLIDE_1_HERE';
+// ✏️ CHANGED: Thumbnail URL updated to actual Cloudinary slide-1 URL
+const THUMBNAIL_URL = 'https://res.cloudinary.com/dad1bd3st/image/upload/v1779227074/carousel/tech-ai-news/2026-05-19/slide-1-hook.jpg';
 
-// ✏️ CHANGED: Set your desired post date and time (ISO format, your timezone)
-// Example: '2026-05-19T09:00:00+05:30' = tomorrow at 9am India time
-const DUE_AT = '2026-05-19T09:00:00+05:30';
+// ✏️ CHANGED: Posting time set to 3:30am India time on 20-05-2026
+const DUE_AT = '2026-05-20T03:30:00+05:30';
 // =================================
 
 async function gql(query, variables = {}) {
@@ -75,7 +71,8 @@ async function buildPdf() {
   const pdf = await PDFDocument.create();
   for (const path of SLIDES) {
     const bytes = readFileSync(path);
-    const img = await pdf.embedPng(bytes);
+    // ✏️ CHANGED: Using embedJpg since Hugging Face saves as JPG
+    const img = await pdf.embedJpg(bytes);
     const page = pdf.addPage([img.width, img.height]);
     page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
   }
